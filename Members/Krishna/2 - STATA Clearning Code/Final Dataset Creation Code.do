@@ -1,0 +1,415 @@
+******************************************************
+* FINAL MERGED DATASET CREATION
+******************************************************
+
+clear all
+set more off
+
+* Start with GDP data
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\GDP Quarterly- 2017 Chained Dollars.xlsx", sheet("3610010401_databaseLoadingData ") firstrow clear
+
+keep REF_DATE Estimates VALUE
+keep if Estimates == "Gross domestic product at market prices"
+
+rename VALUE GDP
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+drop REF_DATE Estimates
+order Date Time GDP
+sort Date
+
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Unemployment Rate
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Unemployment Rate.xlsx", sheet("1410001701_databaseLoadingData") firstrow clear
+
+capture rename Agegroup Age_group
+capture rename "Age group" Age_group
+
+keep REF_DATE Age_group Gender VALUE
+keep if Age_group == "15 years and over"
+keep if Gender == "Total - Gender"
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+rename VALUE UNRATE
+collapse (mean) UNRATE, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time UNRATE
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Labour Productivity
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Labour Productivity.xlsx", sheet("3610020701_databaseLoadingData") firstrow clear
+
+keep REF_DATE NorthAmericanIndustryClassifi VALUE
+keep if NorthAmericanIndustryClassifi == "Total economy"
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+rename VALUE Labour_Prod
+collapse (mean) Labour_Prod, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time Labour_Prod
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge CEER
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\CEER Monthly Exchange Rate - 1999 Base Year.xlsx", sheet("CEER_MONTHLY_NOMINAL-sd-1990-01") cellrange(A18) firstrow clear
+
+keep date CEER_BROADNM
+rename CEER_BROADNM CEER
+
+gen Date = qofd(date)
+format Date %tq
+collapse (mean) CEER, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time CEER
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Average Weekly Earnings
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Average Weekly Earnings.xlsx", sheet("1410020301_databaseLoadingData") firstrow clear
+
+keep REF_DATE NorthAmericanIndustryClassifi VALUE
+keep if NorthAmericanIndustryClassifi == "Industrial aggregate excluding unclassified businesses [11-91N]"
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+
+rename VALUE AWE
+collapse (mean) AWE, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time AWE
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Bond Yields
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Bond Yields - Daily 2001 onwards.xlsx", sheet("bond_yields_all") cellrange(A28) firstrow clear
+
+keep date BDCDN5YRDQYLD
+rename BDCDN5YRDQYLD GOC5Y
+
+gen Date = qofd(date)
+format Date %tq
+collapse (mean) GOC5Y, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time GOC5Y
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Business Outlook Survey
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Business Outlook Survey (BOS).xlsx", sheet("Business_Outlook_Survey") cellrange(A58) firstrow clear
+
+keep date PC1 ONETWO TWOTHREE ABOVE3
+rename PC1 BOS
+rename ONETWO IE1
+rename TWOTHREE IE2
+rename ABOVE3 IE3
+
+gen Date = quarterly(date,"YQ")
+format Date %tq
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time BOS IE1 IE2 IE3
+keep Date Time BOS IE1 IE2 IE3
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Commodity Price Index
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Commodity Price Index.xlsx", sheet("BCPI_MONTHLY-sd-1972-01-01") cellrange(A21) firstrow clear
+
+keep date MBCPI MENER
+rename MBCPI BCPI
+rename MENER ENERGY
+
+gen Date = qofd(date)
+format Date %tq
+collapse (mean) BCPI ENERGY, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time BCPI ENERGY
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge CPI
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\CPI Monthly - Seasonally Adjusted.xlsx", sheet("1810000601_databaseLoadingData") firstrow clear
+
+keep REF_DATE Productsandproductgroups VALUE
+keep if Productsandproductgroups == "All-items"
+
+rename VALUE CPI
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+
+collapse (mean) CPI, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time CPI
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Foreign Activity Measure Index
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Foreign Activity Measure Index.xlsx", sheet("INDINF_PRODUCT") cellrange(A23) firstrow clear
+
+keep date INDINF_OUTGAPMPR_Q INDINF_FAM_WIOD_Q
+rename INDINF_OUTGAPMPR_Q Output_Gap
+rename INDINF_FAM_WIOD_Q FAM_IO
+
+gen Date = quarterly(date, "YQ")
+format Date %tq
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time Output_Gap FAM_IO
+keep Date Time Output_Gap FAM_IO
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Global Supply Chain Pressure Index
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Global Supply Chain Pressure Index.xlsx", sheet("GSCPI Monthly Data") cellrange(A5) firstrow clear
+
+rename A Date
+rename B GSCPI
+
+gen date_clean = date(Date, "DMY")
+format date_clean %td
+
+gen Date_q = qofd(date_clean)
+format Date_q %tq
+collapse (mean) GSCPI, by(Date_q)
+
+rename Date_q Date
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time GSCPI
+keep Date Time GSCPI
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Overnight Interest Rate (Updated version)
+clear all
+
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\boc_interest_rates_2001_2009.xlsx", firstrow clear
+gen temp_date = date(Month, "MY")
+
+format temp_date %td
+gen Date = qofd(temp_date)
+format Date %tq
+
+rename AverageInterestRate Policy_Rate
+collapse (mean) Policy_Rate, by(Date)
+
+keep if Date >= yq(2001,1) & Date <= yq(2009,4)
+tempfile old_rates
+
+save `old_rates'
+
+* Then load and process the newer data (2009 onwards)
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Overnight Interest Rate - Daily Since 2009 April 21.xlsx", sheet("V39079-sd-2001-01-01") cellrange(A9:C4265) firstrow clear
+keep date V39079
+
+rename V39079 Overnight_Rate
+gen Date = qofd(date)
+format Date %tq
+
+collapse (mean) Overnight_Rate, by(Date)
+tempfile new_rates
+save `new_rates'
+
+* Combine both datasets
+use `old_rates', clear
+merge 1:1 Date using `new_rates'
+* Use older data where new data is missing
+replace Overnight_Rate = Policy_Rate if missing(Overnight_Rate)
+drop Policy_Rate _merge
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+order Date Time Overnight_Rate
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+
+* Merge Survey of Consumer Expectations
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Survey of Consumer Expectations (SCE).xlsx", sheet("CES_DEMOGRAPHICS (1)") cellrange(A1636:BJI1679) firstrow clear
+
+keep date CES_C1_MID_TERM CES_C1_SHORT_TERM
+rename CES_C1_SHORT_TERM Infl_Exp_1y
+rename CES_C1_MID_TERM Infl_Exp_2y
+
+gen Date = quarterly(date, "YQ")
+format Date %tq
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time Infl_Exp_1y Infl_Exp_2y
+keep Date Time Infl_Exp_1y Infl_Exp_2y
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Job Vacancy Rate
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Job Vacancy Rate - 2015 onwards.xlsx", sheet("1410037101_databaseLoadingData") firstrow clear
+
+keep REF_DATE GEO Statistics VALUE
+keep if Statistics == "Job vacancy rate"
+keep if GEO == "Canada"
+drop Statistics GEO
+
+rename VALUE Job_Vacancy_Rate
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+
+collapse (mean) Job_Vacancy_Rate, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time Job_Vacancy_Rate
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge Unit Labour Cost
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Unit Labour Cost.xlsx", sheet("3610020701_databaseLoadingData ") firstrow clear
+
+keep REF_DATE NorthAmericanIndustryClassifi VALUE
+keep if NorthAmericanIndustryClassifi == "Total economy"
+drop NorthAmericanIndustryClassifi
+
+rename VALUE Unit_Labour_Cost
+
+gen Date = qofd(REF_DATE)
+format Date %tq
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+drop REF_DATE
+order Date Time Unit_Labour_Cost
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Merge USA Interest Rate
+clear all
+import excel "C:\Users\kpaud\OneDrive\Desktop\BOC Project\USA Interest Rate - Monthly 2000 onwards.xlsx", sheet("Monthly") firstrow clear
+
+keep observation_date FEDFUNDS
+rename FEDFUNDS USA_Interest_Rate
+
+gen Date = qofd(observation_date)
+format Date %tq
+
+collapse (mean) USA_Interest_Rate, by(Date)
+
+keep if Date >= yq(2000,1)
+gen Time = Date - yq(2000,1) + 1
+
+order Date Time USA_Interest_Rate
+sort Date
+
+merge 1:1 Date using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta"
+drop _merge
+save "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", replace
+
+* Load final dataset and export to Excel
+use "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.dta", clear
+
+* Order variables logically
+order Date Time GDP UNRATE Labour_Prod CEER AWE GOC5Y BOS IE1 IE2 IE3 BCPI ENERGY CPI Output_Gap FAM_IO GSCPI Overnight_Rate Infl_Exp_1y Infl_Exp_2y Job_Vacancy_Rate Unit_Labour_Cost USA_Interest_Rate
+
+* Export to Excel
+export excel using "C:\Users\kpaud\OneDrive\Desktop\BOC Project\Final_BOC_Dataset.xlsx", firstrow(variables) replace
+
+display "Final merged dataset created successfully!"
+display "File saved as: Final_BOC_Dataset.xlsx"
+
+
+
+
