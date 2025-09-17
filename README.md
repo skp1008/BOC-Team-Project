@@ -3,15 +3,15 @@
 This will be out team's main repository for data and coding.  
 It will serve as the central place where each member uploads their datasets and code, and later where we combine everything into the shared project.
 
-__
+---
 
 ## External Links:
 
-- **Meeting minutes/** https://docs.google.com/document/d/15Lxe9nOWRlQ3TuU6ez2OFg8fnT9yrShHk-Zegg2qeyQ/edit?tab=t.0
+- **Meeting minutes:** https://docs.google.com/document/d/15Lxe9nOWRlQ3TuU6ez2OFg8fnT9yrShHk-Zegg2qeyQ/edit?tab=t.0
 
-- **Meeting list with professors/** https://docs.google.com/spreadsheets/d/1Ai-dB4NIYXdLK-kZq-CFaTUyIx5sU6iYEb1XW8PCSwc/edit?usp=sharing
+- **Meeting list with professors:** https://docs.google.com/spreadsheets/d/1Ai-dB4NIYXdLK-kZq-CFaTUyIx5sU6iYEb1XW8PCSwc/edit?usp=sharing
 
-- **Google drive/** 
+- **Google drive:** 
 
 
 ---
