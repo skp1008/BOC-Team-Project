@@ -1,6 +1,6 @@
 # BOC Team Project
 
-This repository is for our group’s BOC Team Project.  
+This will be out team's main repository for data and coding.  
 It will serve as the central place where each member uploads their datasets and code, and later where we combine everything into the shared project.
 
 ---
