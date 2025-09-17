@@ -5,10 +5,10 @@ It will serve as the central place where each member uploads their datasets and 
 
 ---
 
-## Project Structure
-- **project/** – Main project files (where we’ll work together on the final combined code)  
-- **members/** – Each team member has their own folder here for personal uploads  
-  - **krishna/** – Krishna’s work directory  
+## Repository Structure (folders)
+- **Main/** – Main project files (where we’ll work together on the final combined code)  
+- **Members/** – Each team member has their own folder here for personal uploads  
+  - **krishna/** – Krishna’s files  
   - **[other members will also have their own folders]**  
 - **README.md** – Project information and setup instructions  
 
