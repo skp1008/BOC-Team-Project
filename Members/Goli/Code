@@ -1,0 +1,337 @@
+*set directory 
+cd "/Users/goli/Desktop/Project/Data"
+
+*import CPI data
+import delimited using "cpi_core.csv"
+
+*keep trim and median
+keep if inlist(vector, "v108785714", "v108785715")
+
+*drop everything you don't need 
+drop geo dguid alternativemeasures uom uom_id scalar_factor scalar_id coordinate status symbol terminated decimals
+
+*Reshape the vectors 
+reshape wide value, i(ref_date) j(vector) string
+
+*rename values 
+rename valuev108785714 cpi_median_yoy 
+rename valuev108785715 cpi_trim_yoy
+
+*generate ref_date variable 
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+
+*turn daily and then qurterly with 3 month averages 
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) cpi_trim_yoy cpi_median_yoy, by(qdate)
+tsset qdate
+
+*import gdp 
+import delimited "gdp_accounts.csv"
+
+*keep essentials 
+keep ref_date vector value
+keep if inlist(vector, "v1594571783", "v1594571762")
+
+*reshape
+reshape wide value, i(ref_date) j(vector) string
+
+*rename 
+rename valuev1594571783 rgdp
+rename valuev1594571762 gov_cons
+
+*quarterly index
+gen time = _n
+gen qtr = tq(1981q1) + time - 1 
+format qtr %tq
+tsset qtr
+
+*Employment 
+import delimited "unemployment.csv"
+keep ref_date vector value
+reshape wide value, i(ref_date) j(vector) string
+rename valuev2062809 u_rate
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) u_rate, by(qdate)
+tsset qdate
+save "u_rate_q.dta"
+
+*bond yields 
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "goc_yields.csv"
+keep ref_date vector value
+keep if vector == "v122485"
+reshape wide value, i(ref_date) j(vector) string
+rename valuev122485 goc5y
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) goc5y, by(qdate)
+
+*Inflation expectation one year ahead 
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "csce.csv"
+keep v1 v2
+keep in 1632/L
+rename v1 ref_date
+rename v2 csce_1y
+gen qdate = quarterly(ref_date,"YQ")
+format qdate %tq
+tsset qdate
+
+*CPI, shelter 
+clear
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "cpi_sa.csv"
+keep ref_date vector value
+keep if vector == "v41690916"
+reshape wide value, i(ref_date) j(vector) string
+rename valuev41690916 cpi_shelter
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) cpi_shelter, by(qdate)
+tsset qdate
+save "cpi_shelter_q.dta
+
+*Housing Starts 
+clear
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "housing_starts.csv"
+keep ref_date vector value
+keep if vector == "v42128180"
+reshape wide value, i(ref_date) j(vector) string
+rename valuev42128180 starts_urban_m
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) starts_urban_m, by(qdate)
+tsset qdate
+save "starts_urban_q.dta
+
+*Average Hourly Income 
+clear all 
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "ahe.csv"
+keep ref_date vector value
+keep if inlist(vector, "v54027306", "v54027310", "v54027313")
+reshape wide value, i(ref_date) j(vector) string
+rename valuev54027306 awe_all_ot
+rename valuev54027310 hours_hourly_wk
+rename valuev54027313 std_week_salaried
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) awe_all_ot hours_hourly_wk std_week_salaried, by(qdate)
+tsset qdate
+save "earnings_q.dta"
+
+*Vacancy rate 
+clear all 
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "vacancy.csv"
+keep ref_date vector value
+keep if vector == "v1446283287"
+reshape wide value, i(ref_date) j(vector) string
+rename valuev1446283287 vac_rate
+gen mdate = monthly(ref_date,"YM")
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) vac_rate, by(qdate)
+tsset qdate
+save "vacancy_q.dta"
+
+*Term of Trade 
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "tot.csv"
+keep ref_date vector value
+keep if vector == "v61992664"
+reshape wide value, i(ref_date) j(vector) string
+rename valuev61992664 tot_index
+gen qdate = quarterly(ref_date,"YQ")
+format qdate %tq
+tsset qdate
+
+*Canadian Effective Exchange Rates 
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "ceer.csv"
+keep v1 v2
+keep in 11/L
+rename v1 ref_date
+rename v2 ceer_d
+destring ceer_d, replace force
+gen mdate = mofd(ddate)
+format mdate %tm
+collapse (mean) ceer_d, by(mdate)
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) ceer_d, by(qdate)
+rename ceer_d ceer_idx
+tsset qdate
+save "ceer_q.dta"
+
+*BCPI
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "bcpi.csv"
+keep v1 v2 v4 v7
+keep in 18/L
+rename v1 ref_date 
+rename v2 bcpi_total
+rename v3 bcpi_energy
+rename v4 bcpi_energy
+rename v7 bcpi_agri
+destring bcpi_total bcpi_energy bcpi_agri, replace force
+gen ddate = date(ref_date, "YMD")
+format ddate %td
+gen mdate = mofd(ddate)
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) bcpi_total bcpi_energy bcpi_agri, by(qdate)
+tsset qdate
+save "bcpi_q.dta"
+
+*IMF food prices 
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "food_wb.csv"
+rename observation_date ref_date 
+rename pfoodindexm food_imf
+gen ddate = date(ref_date,"YMD")
+format ddate %td
+gen mdate = mofd(ddate)
+format mdate %tm
+gen qdate = qofd(dofm(mdate))
+format qdate %tq
+collapse (mean) food_imf, by(qdate)
+tsset qdate
+save "food_imf_q.dta"
+
+*Govt lending and borrowing 
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+import delimited "gov_balance.csv"
+keep ref_date vector value
+keep if vector == "v62425571"
+reshape wide value, i(ref_date) j(vector) string
+rename valuev62425571 gov_lend_borrow
+gen qdate = quarterly(ref_date,"YQ")
+format qdate %tq
+tsset qdate
+keep gov_lend_borrow qdate
+save "gov_nlb_q.dta"
+
+*merging data 
+use "gdp_q.dta"
+format qdate %tq
+tsset qdate
+isid qdate
+merge 1:1 qdate using "cpi_core_q.dta", keepusing(cpi_trim_yoy cpi_median_yoy) nogen
+merge 1:1 qdate using "u_rate_q.dta", keepusing(u_rate) nogen
+merge 1:1 qdate using "csce_q.dta", keepusing(csce_1y) nogen
+merge 1:1 qdate using "goc5y_q.dta", keepusing(goc5y) nogen
+merge 1:1 qdate using "cpi_shelter_q.dta", keepusing(cpi_shelter) nogen
+merge 1:1 qdate using "starts_urban_q.dta", keepusing(starts_urban_m) nogen
+rename starts_urban_m start_urban_q
+merge 1:1 qdate using "earnings_q.dta", keepusing(awe_all_ot hours_hourly_wk std_week_salaried) nogen
+merge 1:1 qdate using "vacancy_q.dta", keepusing(vac_rate) nogen
+merge 1:1 qdate using "ceer_q.dta",     keepusing(ceer_idx) nogen
+merge 1:1 qdate using "bcpi_q.dta",     keepusing(bcpi_total bcpi_energy bcpi_agri) nogen
+merge 1:1 qdate using "food_imf_q.dta", keepusing(food_imf) nogen
+
+*testing and graphs 
+clear all
+cd "/Users/goli/Desktop/Project/Data"
+use "master_q.dta", clear
+tsset qdate
+
+twoway (line cpi_median_yoy qdate)
+graph save "Graph" "/Users/goli/Desktop/cpi_median_yoy.gph"
+dfuller cpi_median_yoy, lags(4) regress
+gen u_rate_change = D.u_rate/L.u_rate
+
+*date-range on graph 
+quietly summarize qdate if cpi_median_yoy < ., meanonly
+local xmin = r(min)
+local xmax = r(max)
+twoway (line cpi_median_yoy qdate if inrange(qdate, `xmin', `xmax'), sort lwidth(medthick))
+graph save "Graph" "/Users/goli/Desktop/Project/graphs/cpi_median_yoy.gph", replace
+
+quietly summarize qdate if cpi_trim_yoy < ., meanonly
+local xmin = r(min)
+local xmax = r(max)
+twoway (line cpi_trim_yoy qdate if inrange(qdate, `xmin', `xmax'), sort lwidth(medthick))
+graph save "Graph" "/Users/goli/Desktop/Project/graphs/cpi_trim_yoy.gph"
+dfuller cpi_median_yoy, lags(4) regress
+
+*log transformations 
+gen ln_ceer = ln(ceer_idx) if ceer_idx>0
+gen ceer_qoq_pct = 100*D.ln_ceer
+label var ceer_qoq_pct "CEER q/q % change"
+
+*running VAR with one variable 
+var goc5y_change if qdate>=tq(1951q2), lags(1/4)
+varsoc goc5y_change
+
+*running the model 
+*Model 1 
+clear all 
+cd "/Users/goli/Desktop/Project/Data"
+use "master_q.dta", clear
+tsset qdate
+format qdate %tq
+summarize qdate if !missing(cpi_median_yoy), meanonly
+display %tq r(min)
+var cpi_median_yoy rgdp u_rate_change dbank_r if qdate>=tq(1990q1), lags(1/4)
+varsoc
+var cpi_median_yoy rgdp u_rate_change dbank_r if qdate>=tq(1990q1), lags(1/4) exog(covid) dfk
+predict cpi_median_yoy_predicted, xb
+predict cpi_median_yoy_predicted_covid, xb
+twoway line cpi_median_yoy cpi_median_yoy_predicted qdate if qdate>=tq(1990q1)
+graph save "Graph" "/Users/goli/Desktop/Project/graphs/cpi_median_yoy_predicted.gph"
+replace covid = inrange(qdate, tq(2020q2), tq(2021q4))
+twoway line cpi_median_yoy model1cpi_median_yoy model1cpi_median_yoy_lb model1cpi_median_yoy_ub qdate i
+> f qdate>=tq(1990q1)
+
+*Model2 
+summarize qdate if !missing(cpi_trim_yoy), meanonly
+display %tq r(min)
+fcast compute model2, step(8)
+save "master_q.dta", replace 
+
+*MODEL3 
+var cpi_trim_yoy rgdp u_rate_change dbank_r goc5y_change csce_1y_change if qdate>=tq(2015q1), lags(1/2)
+twoway line cpi_trim_yoy model3cpi_trim_yoy model3cpi_trim_yoy_lb model3cpi_trim_yoy_ub if qdate>=tq(2015q1)
+varsoc
+
+var cpi_trim_yoy rgdp u_rate_change goc5y_change ceer_qoq_pct tot_index_pct start_urban_q_pct 1999q2
+
+var cpi_trim_yoy rgdp dbank_r u_rate_change goc5y_change ceer_qoq_pct tot_index_pct start_urban_q_pct if qdate>=tq(1999q2), lags(1/4)
+
+
+*model 1 - core 
+vargranger
+graph save "Graph" "/Users/goli/Desktop/final/graphs/trim_market_1.gph"
+
+twoway line cpi_trim model3cpi_trim model3cpi_trim_lb model3cpi_trim_ub qdate if qdate >= tq(1992q2), ytitle("CPI Trim") xtitle("Time") legend(label(1 "Actual") label(2 "Forecast") label(3 "95% CI LB") label(4 "95% CI UB"))
+graph save "Graph" "/Users/goli/Desktop/final/graphs/model3.gph"
+
+var cpi_trim rgdp u_rate_change dbocpr goc5y_change, lags (1/4) 
+
+
+list qdate model8_covidcpi_trim if qdate>= yq(2025,3) & qdate <= yq(2027,2)
+
+
